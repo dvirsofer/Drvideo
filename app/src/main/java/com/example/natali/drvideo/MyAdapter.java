@@ -1,0 +1,51 @@
+package com.example.natali.drvideo;
+
+import android.content.Context;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+import java.util.List;
+
+
+public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>{
+
+    private List<UserItem> users;
+    private int rowLayout;
+    private Context mContext;
+    public MyAdapter(List<UserItem> users, int rowLayout, Context context) {
+        this.users = users;
+        this.rowLayout = rowLayout;
+        this.mContext = context;
+    }
+    @Override
+    public int getItemCount() {
+        return users == null ? 0 : users.size();
+    }
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+        View v = LayoutInflater.from(viewGroup.getContext()).inflate(rowLayout, viewGroup, false);
+        return new ViewHolder(v);
+    }
+    @Override
+    public void onBindViewHolder(ViewHolder viewHolder, int i) {
+        UserItem myItem = users.get(i);
+        viewHolder.name.setText(myItem.getName());
+//        viewHolder.image.setImageDrawable(mContext.getDrawable(myItem.getImg()));
+        viewHolder.email.setText(myItem.getEmail());
+    }
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        public TextView name;
+        public TextView email;
+        public ImageView image;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            name = (TextView) itemView.findViewById(R.id.text_name);
+            image = (ImageView) itemView.findViewById(R.id.image);
+            email = (TextView) itemView.findViewById(R.id.text_email);
+        }
+    }
+}

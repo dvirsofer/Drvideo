@@ -4,6 +4,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -23,6 +26,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,28 +35,52 @@ public class MainActivity extends AppCompatActivity
     private FirebaseAuth auth;
     private String userId = "";
     private DatabaseReference myRef;
+    private Bundle bundle;
+    private ArrayList<UserItem> users;
+    private RecyclerView mRecyclerView;
+    private MyAdapter mAdapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mRecyclerView = (RecyclerView)findViewById(R.id.list);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.setItemAnimator(new DefaultItemAnimator());
+
         auth = FirebaseAuth.getInstance();
         // Write a message to the database
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         myRef = database.getReference("users");
         Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        if (bundle != null) {
-            userId = (String) bundle.get("user_id");
-            HashMap<String, Object> userData = new HashMap<>();
-            userData.put("status", 1);
-            myRef.child(userId).updateChildren(userData);
-        }
-        else{
-            userId = auth.getUid();
-            HashMap<String, Object> userData = new HashMap<>();
-            userData.put("status", 1);
-            myRef.child(userId).updateChildren(userData);
-        }
+        bundle = intent.getExtras();
+        users = new ArrayList<UserItem>();
+
+        ValueEventListener eventListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                    User user = ds.getValue(User.class);
+                    Log.d("TAG", user.getEmail());
+                    UserItem userItem = new UserItem(user.getName(), user.getEmail(), user.getStatus());
+                    users.add(userItem);
+                }
+
+                /*initialised Adapter Class and set Adapter on ListView */
+                mAdapter = new MyAdapter(users, R.layout.adapter_user_item, getApplicationContext());
+                mRecyclerView.setAdapter(mAdapter);
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+        myRef.addListenerForSingleValueEvent(eventListener);
+
+        updateUserStatus();
+
+
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -74,6 +102,18 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    private void updateUserStatus() {
+        if (bundle != null) {
+            userId = (String) bundle.get("user_id");
+        }
+        else{
+            userId = auth.getUid();
+        }
+        HashMap<String, Object> userData = new HashMap<>();
+        userData.put("status", 1);
+        myRef.child(userId).updateChildren(userData);
     }
 
     @Override
@@ -128,8 +168,6 @@ public class MainActivity extends AppCompatActivity
 
         }
         else if (id == R.id.nav_logout) {
-            User user = new User(userId, 0);
-//            Map<String, Object> userData = user.toMap();
             HashMap<String, Object> userData = new HashMap<>();
             userData.put("status", 0);
             myRef.child(userId).updateChildren(userData);
@@ -137,7 +175,6 @@ public class MainActivity extends AppCompatActivity
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
 
         }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
