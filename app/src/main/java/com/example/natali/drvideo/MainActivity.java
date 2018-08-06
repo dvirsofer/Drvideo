@@ -61,8 +61,9 @@ public class MainActivity extends AppCompatActivity
                 for (DataSnapshot ds : dataSnapshot.getChildren()) {
                     User user = ds.getValue(User.class);
                     Log.d("TAG", user.getEmail());
-                    UserItem userItem = new UserItem(user.getName(), user.getEmail(), user.getStatus());
+                    UserItem userItem = new UserItem(user.getName(), user.getPhoneNumber(), user.getStatus());
                     users.add(userItem);
+
                 }
 
                 /*initialised Adapter Class and set Adapter on ListView */
@@ -79,8 +80,6 @@ public class MainActivity extends AppCompatActivity
         myRef.addListenerForSingleValueEvent(eventListener);
 
         updateUserStatus();
-
-
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
